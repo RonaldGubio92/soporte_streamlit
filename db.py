@@ -3,10 +3,10 @@ from datetime import datetime
 
 def connect_db():
     return pymssql.connect(
-        server='SQL5105.site4now.net',
-        user='db_a56ecc_enedb_admin',
-        password='enedPassword524152',
-        database='db_a56ecc_enedb'
+        server=st.secrets["database"]["server"],
+        user=st.secrets["database"]["user"],
+        password=st.secrets["database"]["password"],
+        database=st.secrets["database"]["database"]
     )
 
 def get_user(usuario, password):
