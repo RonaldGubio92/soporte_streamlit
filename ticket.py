@@ -7,7 +7,7 @@ from db import connect_db, get_ticket_info, get_admin_email
 def reabrir_ticket(ticket_id):
     conn = connect_db()
     cursor = conn.cursor()
-    cursor.execute("UPDATE Tickets SET estado = 'abierto' WHERE id_ticket = ?", (ticket_id,))
+    cursor.execute("UPDATE Tickets SET estado = 'abierto' WHERE id_ticket = %s", (ticket_id,))
     conn.commit()
     
     # Obtener información del ticket y usuario para el correo
@@ -34,7 +34,7 @@ def create_ticket(titulo, descripcion, id_usuario, email_usuario, email_admin):
     cursor.execute("""
         INSERT INTO Tickets (titulo, descripcion, id_usuario)
         OUTPUT INSERTED.id_ticket
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
     """, (titulo, descripcion, id_usuario))
     
     row = cursor.fetchone()
@@ -45,7 +45,7 @@ def create_ticket(titulo, descripcion, id_usuario, email_usuario, email_admin):
 
     # Obtener nombre de usuario y departamento
     cursor.execute("""
-        SELECT nombre, departamento FROM Usuarios WHERE id_usuario = ?
+        SELECT nombre, departamento FROM Usuarios WHERE id_usuario = %s
     """, (id_usuario,))
     user_row = cursor.fetchone()
     if user_row:

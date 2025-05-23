@@ -64,7 +64,7 @@ if 'logged_in' not in st.session_state:
 if 'usuario' not in st.session_state:
     st.session_state['usuario'] = None
 
-# Inicio de sesión
+# Inicio de sesiónd
 if not st.session_state['logged_in']:
     login()
 else:

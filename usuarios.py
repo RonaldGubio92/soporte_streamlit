@@ -37,7 +37,7 @@ def gestionar_usuarios():
                         cursor = conn.cursor()
                         cursor.execute("""
                             INSERT INTO Usuarios (nombre, usuario, password, email, rol, departamento, estado)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
                         """, (nombre, usuario, password, email, rol, departamento, estado))
                         conn.commit()
                         st.session_state["msg_success"] = "✅ Usuario creado exitosamente"
@@ -48,27 +48,28 @@ def gestionar_usuarios():
                         conn.close()
                 else:
                     st.warning("⚠️ Por favor completa todos los campos")
+
     # --- TAB 2: Lista de Usuarios ---
     with tab2:
         st.markdown("### 🧾 Usuarios registrados")
 
         try:
             conn = connect_db()
-            cursor = conn.cursor()
+            cursor = conn.cursor(as_dict=True)
             cursor.execute("SELECT id_usuario, nombre, usuario, email, rol, departamento, estado FROM Usuarios")
             rows = cursor.fetchall()
 
             for row in rows:
-                user_id = row.id_usuario
+                user_id = row['id_usuario']
                 st.markdown(f"**ID Usuario: {user_id}**")
 
-                with st.expander(f"👤 {row.nombre} - {row.usuario}"):
-                    nombre_edit = st.text_input("Nombre", row.nombre, key=f"nombre_{user_id}")
-                    usuario_edit = st.text_input("Usuario", row.usuario, key=f"usuario_{user_id}")
-                    email_edit = st.text_input("Correo", row.email, key=f"email_{user_id}")
-                    rol_edit = st.selectbox("Rol", ["admin", "tecnico"], index=["admin", "tecnico"].index(row.rol), key=f"rol_{user_id}")
-                    departamento_edit = st.text_input("Departamento", row.departamento, key=f"depto_{user_id}")
-                    estado_edit = st.selectbox("Estado", ["activo", "inactivo"], index=["activo", "inactivo"].index(row.estado), key=f"estado_select_{user_id}")
+                with st.expander(f"👤 {row['nombre']} - {row['usuario']}"):
+                    nombre_edit = st.text_input("Nombre", row['nombre'], key=f"nombre_{user_id}")
+                    usuario_edit = st.text_input("Usuario", row['usuario'], key=f"usuario_{user_id}")
+                    email_edit = st.text_input("Correo", row['email'], key=f"email_{user_id}")
+                    rol_edit = st.selectbox("Rol", ["admin", "tecnico"], index=["admin", "tecnico"].index(row['rol']), key=f"rol_{user_id}")
+                    departamento_edit = st.text_input("Departamento", row['departamento'], key=f"depto_{user_id}")
+                    estado_edit = st.selectbox("Estado", ["activo", "inactivo"], index=["activo", "inactivo"].index(row['estado']), key=f"estado_select_{user_id}")
 
                     col1, col2, col3 = st.columns(3)
 
@@ -79,8 +80,8 @@ def gestionar_usuarios():
                                 try:
                                     cursor.execute("""
                                         UPDATE Usuarios 
-                                        SET nombre = ?, usuario = ?, email = ?, rol = ?, departamento = ?, estado = ?
-                                        WHERE id_usuario = ?
+                                        SET nombre = %s, usuario = %s, email = %s, rol = %s, departamento = %s, estado = %s
+                                        WHERE id_usuario = %s
                                     """, (nombre_edit, usuario_edit, email_edit, rol_edit, departamento_edit, estado_edit, user_id))
                                     conn.commit()
                                     st.session_state["msg_success"] = "✅ Usuario actualizado exitosamente"
@@ -90,10 +91,10 @@ def gestionar_usuarios():
 
                     # CAMBIAR ESTADO
                     with col2:
-                        nuevo_estado = "inactivo" if row.estado == "activo" else "activo"
+                        nuevo_estado = "inactivo" if row['estado'] == "activo" else "activo"
                         if st.button(f"🔁 Cambiar a {nuevo_estado}", key=f"btn_cambiar_estado_{user_id}"):
                             try:
-                                cursor.execute("UPDATE Usuarios SET estado = ? WHERE id_usuario = ?", (nuevo_estado, user_id))
+                                cursor.execute("UPDATE Usuarios SET estado = %s WHERE id_usuario = %s", (nuevo_estado, user_id))
                                 conn.commit()
                                 st.session_state["msg_success"] = f"✅ Estado cambiado a {nuevo_estado}"
                                 st.rerun()
@@ -105,7 +106,7 @@ def gestionar_usuarios():
                         if st.checkbox("Confirmar eliminación", key=f"confirm_delete_{user_id}"):
                             if st.button("🗑️ Eliminar", key=f"btn_eliminar_{user_id}"):
                                 try:
-                                    cursor.execute("DELETE FROM Usuarios WHERE id_usuario = ?", (user_id,))
+                                    cursor.execute("DELETE FROM Usuarios WHERE id_usuario = %s", (user_id,))
                                     conn.commit()
                                     st.session_state["msg_success"] = "✅ Usuario eliminado correctamente"
                                     st.rerun()
@@ -113,6 +114,6 @@ def gestionar_usuarios():
                                     st.error(f"❌ Error al eliminar: {e}")
 
         except Exception as e:
-            None#st.error(f"❌ Error al obtener usuarios: {e}")
+            st.error(f"❌ Error al obtener usuarios: {e}")
         finally:
             conn.close()
